@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>README.md Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        sans: ['Inter', 'sans-serif'],
+                    },
+                    colors: {
+                        'primary-blue': '#1D4ED8',
+                        'light-blue': '#DBEAFE',
+                        'dark-gray': '#1F2937',
+                        'light-gray-bg': '#F9FAFB',
+                    }
+                }
+            }
+        }
+    </script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #F9FAFB;
+        }
+
+        .markdown-preview {
+            padding: 1.5rem;
+            background-color: white;
+            border: 1px solid #E5E7EB;
+            border-radius: 0.5rem;
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.1);
+        }
+
+        .markdown-preview h1 {
+            font-size: 2em;
+            margin: 0.67em 0;
+            border-bottom: 2px solid #E5E7EB;
+            padding-bottom: 0.5rem;
+        }
+
+        .markdown-preview h2 {
+            font-size: 1.5em;
+            margin: 0.83em 0;
+            border-bottom: 1px solid #E5E7EB;
+            padding-bottom: 0.3rem;
+        }
+
+        .markdown-preview p {
+            margin: 1em 0;
+            line-height: 1.6;
+        }
+
+        .markdown-preview ul,
+        .markdown-preview ol {
+            margin-left: 20px;
+            list-style-type: disc;
+        }
+
+        .markdown-preview pre {
+            background-color: #F3F4F6;
+            padding: 1rem;
+            border-radius: 0.5rem;
+            overflow-x: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+        }
+
+        .markdown-preview code {
+            font-family: monospace;
+            background-color: #FEF3C7;
+            padding: 2px 4px;
+            border-radius: 4px;
+        }
+
+        .markdown-preview pre code {
+            background-color: transparent;
+            padding: 0;
+        }
+
+        .tab-button.active {
+            border-bottom: 3px solid #1D4ED8;
+            color: #1D4ED8;
+            font-weight: 600;
+        }
+    </style>
+</head>
+
+<body class="min-h-screen p-4 md:p-8">
+
+    <div class="max-w-4xl mx-auto">
+        <header class="text-center mb-10">
+            <h1 class="text-3xl md:text-4xl font-extrabold text-dark-gray mb-2">README.md Generator AI</h1>
+            <p class="text-lg text-gray-600">Transform your project summary into a professional Markdown file using
+                Gemini.</p>
+        </header>
+        <main class="space-y-8">
+            <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200">
+                <h2 class="text-xl font-semibold mb-4 text-dark-gray">1. Project Summary Input</h2>
+                <textarea id="projectSummary" rows="8"
+                    placeholder="Describe your project, including its name, purpose, key features, and how a user would install or run it. E.g., 'A Python web scraper called DataHarvester that uses BeautifulSoup to collect news headlines from 5 major sites. It requires Python 3.9+ and pip install requests beautifulsoup4. To run, use: python harvester.py'"
+                    class="w-full p-3 border border-gray-300 rounded-lg focus:ring-primary-blue focus:border-primary-blue transition duration-150 ease-in-out font-mono text-sm"></textarea>
+                <button id="generateBtn" onclick="handleGenerate()"
+                    class="mt-4 w-full md:w-auto px-6 py-3 bg-primary-blue text-white font-bold rounded-lg shadow-md hover:bg-blue-700 transition duration-150 ease-in-out disabled:bg-gray-400">
+                    Generate README
+                </button>
+            </div>
+            <div class="bg-white p-6 rounded-xl shadow-lg border border-gray-200">
+                <h2 class="text-xl font-semibold mb-4 text-dark-gray">2. Generated README Content</h2>
+                <div class="flex border-b border-gray-200 mb-4">
+                    <button id="tabMarkdown" class="tab-button active px-4 py-2 text-gray-600 transition duration-150"
+                        onclick="showTab('markdown')">
+                        Markdown Source
+                    </button>
+                    <button id="tabPreview" class="tab-button px-4 py-2 text-gray-600 transition duration-150"
+                        onclick="showTab('preview')">
+                        Live Preview
+                    </button>
+                </div>
+                <div id="markdownContent" class="space-y-4">
+                    <div id="loadingIndicator" class="hidden text-center p-8">
+                        <div class="animate-spin inline-block w-8 h-8 border-4 border-primary-blue border-t-transparent rounded-full"
+                            role="status"></div>
+                        <p class="mt-2 text-primary-blue font-medium">Generating professional README...</p>
+                    </div>
+                    <textarea id="readmeOutput" rows="15" readonly
+                        placeholder="Your generated README.md will appear here in Markdown format."
+                        class="w-full p-3 border border-gray-300 rounded-lg bg-light-gray-bg font-mono text-sm"></textarea>
+
+                    <button id="copyBtn" onclick="copyToClipboard()"
+                        class="px-4 py-2 bg-gray-700 text-white font-medium rounded-lg hover:bg-gray-800 transition duration-150 ease-in-out disabled:bg-gray-400"
+                        disabled>
+                        Copy Markdown
+                    </button>
+                </div>
+                <div id="previewContent" class="hidden">
+                    <div id="previewOutput" class="markdown-preview min-h-[300px] text-gray-700">
+                        <p class="text-center text-gray-500 italic pt-12">The live preview will render here once the
+                            README is generated.</p>
+                    </div>
+                </div>
+                <div id="errorBox" class="hidden mt-4 p-4 text-sm text-red-700 bg-red-100 rounded-lg" role="alert">
+                    <span class="font-medium">Error:</span> <span id="errorMessage"></span>
+                </div>
+            </div>
+        </main>
+    </div>
+    <script>
+        const appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id';
+        const firebaseConfig = typeof __firebase_config !== 'undefined' ? JSON.parse(__firebase_config) : {};
+        const initialAuthToken = typeof __initial_auth_token !== 'undefined' ? __initial_auth_token : null;
+        const MODEL_NAME = 'gemini-2.5-flash-preview-09-2025';
+        const API_KEY = "";
+        const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${API_KEY}`;
+        const MAX_RETRIES = 5;
+        const summaryInput = document.getElementById('projectSummary');
+        const readmeOutput = document.getElementById('readmeOutput');
+        const previewOutput = document.getElementById('previewOutput');
+        const generateBtn = document.getElementById('generateBtn');
+        const copyBtn = document.getElementById('copyBtn');
+        const loadingIndicator = document.getElementById('loadingIndicator');
+        const errorBox = document.getElementById('errorBox');
+        const errorMessageSpan = document.getElementById('errorMessage');
+        function simpleMarkdownToHtml(markdownText) {
+            let html = markdownText || '';
+            html = html.replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;');
+            html = html.replace(/```(.*?)\n([\s\S]*?)```/g, function (match, lang, code) {
+                let cleanCode = code.replace(/&amp;/g, '&').replace(/&lt;/g, '<').replace(/&gt;/g, '>');
+                return `<pre><code>${cleanCode}</code></pre>`;
+            });
+            html = html.replace(/^#\s*(.*)$/gm, '<h1>$1</h1>');
+            html = html.replace(/^##\s*(.*)$/gm, '<h2>$1</h2>');
+            html = html.replace(/^###\s*(.*)$/gm, '<h3>$1</h3>');
+            html = html.replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>');
+            html = html.replace(/\*(.*?)\*/g, '<em>$1</em>');
+            html = html.replace(/^(\s*)-\s*(.*)$/gm, '<li>$2</li>');
+            html = html.replace(/(<li>.*<\/li>)/gs, '<ul>$1</ul>');
+            html = html.replace(/<\/ul>\n<ul>/g, '\n');
+            html = html.split('\n\n').map(p => {
+                if (p.includes('<h') || p.includes('<ul') || p.includes('<pre>')) {
+                    return p;
+                }
+                return p.trim() ? `<p>${p.replace(/\n/g, '<br>')}</p>` : '';
+            }).join('\n');
+            return html;
+        }
+        function showTab(tabName) {
+            const markdownTab = document.getElementById('tabMarkdown');
+            const previewTab = document.getElementById('tabPreview');
+            const markdownView = document.getElementById('markdownContent');
+            const previewView = document.getElementById('previewContent');
+            if (tabName === 'markdown') {
+                markdownTab.classList.add('active');
+                previewTab.classList.remove('active');
+                markdownView.classList.remove('hidden');
+                previewView.classList.add('hidden');
+            } else {
+                previewTab.classList.add('active');
+                markdownTab.classList.remove('active');
+                markdownView.classList.add('hidden');
+                previewView.classList.remove('hidden');
+
+                const markdownText = readmeOutput.value;
+                if (markdownText) {
+                    previewOutput.innerHTML = simpleMarkdownToHtml(markdownText);
+                }
+            }
+        }
+        async function handleGenerate() {
+            const summary = summaryInput.value.trim();
+            if (!summary) {
+                showError("Please enter a well-explained summary of your project first.");
+                return;
+            }
+            hideError();
+            await generateReadme(summary);
+        }
+        function showError(message) {
+            errorMessageSpan.textContent = message;
+            errorBox.classList.remove('hidden');
+        }
+        function hideError() {
+            errorBox.classList.add('hidden');
+        }
+        async function generateReadme(summary) {
+            generateBtn.disabled = true;
+            readmeOutput.value = '';
+            copyBtn.disabled = true;
+            loadingIndicator.classList.remove('hidden');
+
+            const systemPrompt = `You are a specialized AI designed to write professional, high-quality GitHub README.md files. Your output must be pure Markdown format. The README must include the following sections:
+1. Title (H1: # Project Name)
+2. Description (1-2 paragraphs summarizing the project's goal and function)
+3. Key Features (a detailed bulleted list)
+4. Installation (step-by-step instructions, using code blocks where appropriate)
+5. Usage (how to run or use the tool, using code blocks where appropriate)
+6. License (use the standard placeholder: ## License
+Distributed under the MIT License. See \`LICENSE\` for more information.)
+
+Analyze the user's summary and extrapolate necessary details to populate these sections. Do not include any introductory or concluding text outside of the complete Markdown document itself.`;
+
+            const userQuery = `Convert the following project summary into a complete, well-formatted README.md file:\n\n---\n${summary}\n---`;
+
+            const payload = {
+                contents: [{ parts: [{ text: userQuery }] }],
+                systemInstruction: { parts: [{ text: systemPrompt }] },
+            };
+
+            for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+                try {
+                    const response = await fetch(API_URL, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify(payload)
+                    });
+
+                    if (!response.ok) {
+                        if (response.status === 429 && attempt < MAX_RETRIES - 1) {
+                            const delay = Math.pow(2, attempt) * 1000 + Math.random() * 1000;
+                            await new Promise(resolve => setTimeout(resolve, delay));
+                            continue;
+                        }
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+
+                    const result = await response.json();
+                    const generatedText = result.candidates?.[0]?.content?.parts?.[0]?.text;
+
+                    if (generatedText) {
+                        readmeOutput.value = generatedText.trim();
+                        copyBtn.disabled = false;
+                        showTab('markdown');
+                        break;
+                    } else {
+                        throw new Error("API response was empty or malformed.");
+                    }
+                } catch (error) {
+                    console.error("API Call Error:", error);
+                    showError("Failed to generate README. Please check your network or try again later.");
+                    break;
+                }
+            }
+            loadingIndicator.classList.add('hidden');
+            generateBtn.disabled = false;
+        }
+        function copyToClipboard() {
+            const text = readmeOutput.value;
+            if (!text) {
+                showError("Nothing to copy.");
+                return;
+            }
+            const textarea = document.createElement('textarea');
+            textarea.value = text;
+            textarea.style.position = 'fixed';
+            textarea.style.left = '-9999px';
+            document.body.appendChild(textarea);
+            textarea.select();
+            try {
+                document.execCommand('copy');
+                copyBtn.textContent = 'Copied!';
+                setTimeout(() => {
+                    copyBtn.textContent = 'Copy Markdown';
+                }, 2000);
+            } catch (err) {
+                console.error('Failed to copy text using execCommand', err);
+                showError("Could not copy text automatically. Please select and copy manually.");
+            } finally {
+                document.body.removeChild(textarea);
+            }
+        }
+        window.onload = () => {
+            summaryInput.value = "";
+        };
+    </script>
+</body>
+
+</html>
